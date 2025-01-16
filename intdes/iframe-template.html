@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Quiz and Couture</title>
+<style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+}
+
+#landing-page, #quiz-complete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  border-radius: 5px;
+}
+
+#landing-page h1, #quiz-complete h1 {
+  font-size: 3em;
+  margin-bottom: 20px;
+}
+
+#start-button, #retake-button, #nextQuestionButton { 
+  padding: 15px 30px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #4CAF50; /* Same background as start button */
+  color: white;
+}
+
+#retake-button {
+  background-color: #007bff;
+  color: white;
+}
+
+#question-container {
+  display: none;
+}
+
+#video-container {
+  margin-bottom: 20px;
+}
+
+#question {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.answer-button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.correct {
+  background-color: #008100;
+}
+
+.incorrect {
+  background-color: lightcoral;
+}
+
+#hint {
+  color: gray;
+  margin-top: 10px;
+  display: none;
+}
+
+video {
+  border: 5px solid #ffffff; 
+  border-radius: 5px;
+  max-width: 60%;
+  height: auto;
+}
+
+/* Progress bar styles */
+#progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+#progress {
+  height: 100%;
+  background-color: #4CAF50;
+  width: 0%;
+}
+
+/* Center and position the Next Question button */
+#video-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+}
+</style>
+</head>
+<body>
+
+<div id="landing-page">
+  <h3>Test your knowledge!</h3>
+  <video id="landingVideo" controls autoplay muted>
+    <source src="videos/landing-video.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <button id="start-button">Let's Play!</button>
+</div>
+
+<div id="question-container">
+  <div id="progress-bar">
+    <div id="progress"></div>
+  </div>
+  <div id="question"></div> 
+
+  <button class="answer-button" onclick="checkAnswer(0)">Option 1</button>
+  <button class="answer-button" onclick="checkAnswer(1)">Option 2</button>
+  <button class="answer-button" onclick="checkAnswer(2)">Option 3</button>
+
+  <p id="hint"></p>
+</div>
+
+<div id="quiz-complete" style="display: none;">
+  <h1>Congratulations!</h1>
+  <p>You have answered all the questions correctly! We hope you have a better understanding of Gen AI!</p>
+  <div id="progress-bar"> 
+    <div id="progress" style="width: 100%;"></div> 
+  </div>
+  <button id="retake-button">Retake Quiz</button>
+</div>
+
+<div id="video-page" style="display: none;"> 
+  <video id="videoPlayer" controls autoplay></video> 
+  <div style="margin-top: 20px;"> 
+    <button id="nextQuestionButton">Next Question</button> 
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    video: "videos/pt_1_animation.mp4",
+    question: "What is AI, pick from the 3 choices below?",
+    answers: ["Artificial Intelligence", "Alien Invasion", "Apple Inc."],
+    correctAnswer: 0
+  },
+  {
+    video: "videos/qn_1_animation.mp4", // Replace with actual video if available
+    question: "What is an example of Gen AI?",
+    answers: ["A Toaster", "ChatGPT", "A Calculator"],
+    correctAnswer: 1
+  },
+  {
+    video: "videos/last_part_animation.mp4", // Replace with actual video if available
+    question: "How has Gen AI helped us in our daily lives?",
+    answers: ["Improved Communication", "Caused Traffic Jams", "Made Food Taste Worse"],
+    correctAnswer: 0
+  },
+];
+
+let currentQuestion = 0;
+let incorrectAttempts = 0;
+let isVideoPlaying = false; 
+
+function loadQuestion() {
+  const current = questions[currentQuestion];
+
+  document.getElementById("question").textContent = current.question;
+
+  const buttons = document.getElementsByClassName("answer-button");
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].textContent = current.answers[i];
+    buttons[i].classList.remove("correct", "incorrect");
+  }
+
+  incorrectAttempts = 0;
+  document.getElementById("hint").style.display = "none";
+
+  // Update progress bar
+  const progress = document.getElementById("progress");
+  progress.style.width = `${(currentQuestion + 1) / questions.length * 100}%`;
+}
+
+function checkAnswer(selected) {
+  const current = questions[currentQuestion];
+  const buttons = document.getElementsByClassName("answer-button");
+
+  if (selected === current.correctAnswer) {
+    buttons[selected].classList.add("correct");
+
+    // Show the video on a new page
+    document.getElementById("question-container").style.display = "none";
+    document.getElementById("video-page").style.display = "block";
+
+    const videoPlayer = document.getElementById("videoPlayer");
+    videoPlayer.src = current.video;
+    videoPlayer.load();
+    videoPlayer.play();
+
+    // Show the "Next Question" button after the video ends
+    videoPlayer.onended = function() {
+      document.getElementById("nextQuestionButton").style.display = "block";
+    };
+
+    document.getElementById("nextQuestionButton").onclick = function() {
+      if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        document.getElementById("video-page").style.display = "none";
+        document.getElementById("question-container").style.display = "block";
+        loadQuestion();
+      } else {
+        document.getElementById("video-page").style.display = "none";
+        document.getElementById("quiz-complete").style.display = "flex";
+      }
+    };
+  } else {
+    buttons[selected].classList.add("incorrect");
+    incorrectAttempts++;
+
+    if (incorrectAttempts >= 2) {
+      document.getElementById("hint").textContent = "Hint: Consider the overall look.";
+      document.getElementById("hint").style.display = "block";
+    }
+  }
+}
+
+document.getElementById("start-button").addEventListener("click", function() {
+  document.getElementById("landing-page").style.display = "none";
+  document.getElementById("question-container").style.display = "block";
+  loadQuestion();
+});
+
+document.getElementById("retake-button").addEventListener("click", function() {
+  currentQuestion = 0;
+  document.getElementById("quiz-complete").style.display = "none";
+  document.getElementById("landing-page").style.display = "flex";
+});
+</script>
+
+</body>
+</html>
